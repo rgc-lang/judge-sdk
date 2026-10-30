@@ -12,34 +12,62 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-musl
+            arch: x86_64
+          - target: aarch64-unknown-linux-musl
+            arch: aarch64
     steps:
       - uses: actions/checkout@v4
 
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: x86_64-unknown-linux-musl
+          targets: ${{ matrix.target }}
 
-      # musl 静态链接：不挑发行版的 glibc 版本，用户机器上解压即用。
-      - name: Install musl toolchain
-        run: sudo apt-get update && sudo apt-get install -y musl-tools
+      # cross 负责 musl 交叉链接：静态产物不挑发行版的 glibc 版本。
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cross
 
       - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
 
       - name: Build
-        run: cargo build --release --target x86_64-unknown-linux-musl
+        run: cross build --release --target ${{ matrix.target }}
 
       - name: Package
         run: |
           set -euo pipefail
-          cd target/x86_64-unknown-linux-musl/release
-          tar -czf "$GITHUB_WORKSPACE/rgc-agent-x86_64-linux.tar.gz" rgc-agent
+          cd target/${{ matrix.target }}/release
+          tar -czf "$GITHUB_WORKSPACE/rgc-agent-linux-${{ matrix.arch }}.tar.gz" rgc-agent
           cd "$GITHUB_WORKSPACE"
-          sha256sum rgc-agent-x86_64-linux.tar.gz > rgc-agent-x86_64-linux.tar.gz.sha256
+          sha256sum rgc-agent-linux-${{ matrix.arch }}.tar.gz > rgc-agent-linux-${{ matrix.arch }}.tar.gz.sha256
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rgc-agent-linux-${{ matrix.arch }}
+          path: |
+            rgc-agent-linux-${{ matrix.arch }}.tar.gz
+            rgc-agent-linux-${{ matrix.arch }}.tar.gz.sha256
+
+  publish:
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
 
       - uses: softprops/action-gh-release@v2
         with:
           files: |
-            rgc-agent-x86_64-linux.tar.gz
-            rgc-agent-x86_64-linux.tar.gz.sha256
+            dist/*
             scripts/install.sh
           generate_release_notes: true

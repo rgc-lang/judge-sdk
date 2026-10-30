@@ -17,15 +17,19 @@ RGC OJ 的用户侧评测 agent：用户在自己的 GPU 机器上装一个二�
 curl -fsSL https://github.com/rgc-lang/judge-sdk/releases/latest/download/install.sh | bash
 ```
 
+支持 **Linux x86_64 / aarch64**（脚本按 `uname -m` 自动选包）。
+macOS 没有 CUDA，Windows 需要单独移植，两者都会直接报错退出。
+
 或者直接下压缩包：
 
 ```bash
-curl -LO https://github.com/rgc-lang/judge-sdk/releases/latest/download/rgc-agent-x86_64-linux.tar.gz
-tar -xzf rgc-agent-x86_64-linux.tar.gz
+curl -LO https://github.com/rgc-lang/judge-sdk/releases/latest/download/rgc-agent-linux-x86_64.tar.gz
+tar -xzf rgc-agent-linux-x86_64.tar.gz
 ```
 
 发布走 GitHub Releases（CDN 直出）：打 `v*` tag 触发 `.github/workflows/release.yml`，
-在 ubuntu-22.04 上交叉编译到 `x86_64-unknown-linux-musl`，产物连同 `install.sh` 一起上传。
+矩阵构建 `x86_64-unknown-linux-musl` 与 `aarch64-unknown-linux-musl`（cross 交叉编译），
+产物连同 `install.sh` 一起上传。
 
 ## 构建
 
