@@ -9,6 +9,24 @@ RGC OJ 的用户侧评测 agent：用户在自己的 GPU 机器上装一个二�
 - 结果只用于练习与排行，不做防作弊
 - 榜单按「同硬件」分桶比较，绝对耗时才有意义
 
+## 安装
+
+一行装到 `~/.local/bin`（静态链接，不挑发行版）：
+
+```bash
+curl -fsSL https://github.com/rgc-lang/judge-sdk/releases/latest/download/install.sh | bash
+```
+
+或者直接下压缩包：
+
+```bash
+curl -LO https://github.com/rgc-lang/judge-sdk/releases/latest/download/rgc-agent-x86_64-linux.tar.gz
+tar -xzf rgc-agent-x86_64-linux.tar.gz
+```
+
+发布走 GitHub Releases（CDN 直出）：打 `v*` tag 触发 `.github/workflows/release.yml`，
+在 ubuntu-22.04 上交叉编译到 `x86_64-unknown-linux-musl`，产物连同 `install.sh` 一起上传。
+
 ## 构建
 
 ```bash
