@@ -1,0 +1,45 @@
+name: release
+
+# 打 tag（v0.1.0）即发布；也可以手动触发。
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-musl
+
+      # musl 静态链接：不挑发行版的 glibc 版本，用户机器上解压即用。
+      - name: Install musl toolchain
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build
+        run: cargo build --release --target x86_64-unknown-linux-musl
+
+      - name: Package
+        run: |
+          set -euo pipefail
+          cd target/x86_64-unknown-linux-musl/release
+          tar -czf "$GITHUB_WORKSPACE/rgc-agent-x86_64-linux.tar.gz" rgc-agent
+          cd "$GITHUB_WORKSPACE"
+          sha256sum rgc-agent-x86_64-linux.tar.gz > rgc-agent-x86_64-linux.tar.gz.sha256
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            rgc-agent-x86_64-linux.tar.gz
+            rgc-agent-x86_64-linux.tar.gz.sha256
+            scripts/install.sh
+          generate_release_notes: true

@@ -1,0 +1,36 @@
+{
+  "id": 1,
+  "problem_slug": "saxpy",
+  "language": "cuda",
+  "time_limit_ms": 1000,
+  "code": "__global__ void saxpy_kernel(float a, const float* x, const float* y, float* out, int n) {\n    int i = blockIdx.x * blockDim.x + threadIdx.x;\n    if (i < n) out[i] = a * x[i] + y[i];\n}\n\nvoid solution(const RgcArgs* args) {\n    int n = args->a_len;\n    int block = 256;\n    int grid = (n + block - 1) / block;\n    saxpy_kernel<<<grid, block>>>(2.0f, args->a, args->b, args->out, n);\n}\n",
+  "reference_code": "void reference(const RgcArgs* args) {\n    for (int i = 0; i < args->a_len; i++) {\n        args->out[i] = 2.0f * args->a[i] + args->b[i];\n    }\n}\n",
+  "judge": {
+    "rtol": 1e-05,
+    "atol": 1e-06,
+    "warmup": 10,
+    "repeat": 50,
+    "cases": [
+      {
+        "ordinal": 1,
+        "a_len": 1048576,
+        "b_len": 1048576,
+        "out_len": 1048576,
+        "m": 1048576,
+        "n": 1,
+        "k": 1,
+        "seed": 42
+      },
+      {
+        "ordinal": 2,
+        "a_len": 16777216,
+        "b_len": 16777216,
+        "out_len": 16777216,
+        "m": 16777216,
+        "n": 1,
+        "k": 1,
+        "seed": 7
+      }
+    ]
+  }
+}
